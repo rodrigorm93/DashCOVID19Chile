@@ -142,9 +142,11 @@ app.layout = html.Div(style={'backgroundColor': colors['background']}, children=
     }),
 
     html.Div(children='Tipos de Busqueda', style={
+        'color': colors['text'],
         'textAlign': 'center',
-        'color': colors['text']
-    }),
+        'width': '49%','float': 'right', 'display': 'inline-block',  'padding': '0px 20px 20px 20px'
+    }
+),
 
 
       html.Div([
