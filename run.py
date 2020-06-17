@@ -147,7 +147,6 @@ app.layout = html.Div(style={'backgroundColor': colors['background']}, children=
     }),
 
 
-
       html.Div([
             dcc.Dropdown(
                 id='crossfilter-xaxis-column',
@@ -155,7 +154,7 @@ app.layout = html.Div(style={'backgroundColor': colors['background']}, children=
                 value='Regiones'
             ),
           
-        ],
+        ],style={'width': '49%','float': 'right', 'display': 'inline-block',  'padding': '0px 20px 20px 20px'}
       ),
 
 
@@ -164,7 +163,7 @@ app.layout = html.Div(style={'backgroundColor': colors['background']}, children=
             id='basic-interactions',
             clickData={'points': [{'location': 'Chile'}]}
         )
-    ], style={'width': '49%', 'display': 'inline-block', 'padding': '0 20'}),
+    ], style={'width': '49%','float': 'left', 'display': 'inline-block', 'padding': '0 20'}),
 
     html.Div([
         dcc.Graph(id='x-time-series'),
