@@ -117,6 +117,11 @@ colors = {
 }
 
 
+colors2 = {
+    'text': '#000000'
+}
+
+
 app.layout = html.Div(style={'backgroundColor': colors['background']}, children=[
 
      html.H1(
@@ -127,11 +132,21 @@ app.layout = html.Div(style={'backgroundColor': colors['background']}, children=
         }
     ),
 
+ html.Div(children='Desarrollado por Rodrigo Ramirez', style={
+        'textAlign': 'center',
+        'color': colors2['text']
+    }),
+ html.Div(children='Contacto: ra.ramirez1993@gmail.com', style={
+        'textAlign': 'center',
+        'color': colors2['text']
+    }),
 
     html.Div(children='Tipos de Busqueda', style={
         'textAlign': 'center',
         'color': colors['text']
     }),
+
+
 
       html.Div([
             dcc.Dropdown(
@@ -418,3 +433,6 @@ def update_y_timeseries(clickData,value):
 
 if __name__ == '__main__':
     app.run_server(debug=True)
+
+#creado:rodrigo ramirez 
+#contacto:ra.ramirez1993@gmail.com
