@@ -15,6 +15,8 @@ import os
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 
+
+
 server = Flask(__name__)
 server.secret_key = os.environ.get('secret_key', 'secret')
 app = dash.Dash(name = __name__, server = server,external_stylesheets=external_stylesheets)
@@ -46,6 +48,12 @@ fecha_fallecidos_comuna= fecha_fallecidos_comuna[5:]
 fecha_activos_comuna =data_activos_por_comuna.columns
 fecha_activos_comuna= fecha_activos_comuna[5:]
 #Regiones
+#hospitalizaciones
+hosp_region = pd.read_csv('https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master/output/producto8/UCI.csv')
+fecha_hosp_region =hosp_region.columns
+fecha_hosp_region= fecha_hosp_region[3:]
+
+
 data_activos_region = data_activos_por_comuna[data_activos_por_comuna['Comuna']=='Total']
 data_activos_region.loc[data_activos_region['Region'] == 'Tarapaca', "Region"] = 'Tarapacá'
 data_activos_region.loc[data_activos_region['Region'] == 'Valparaiso', "Region"] = 'Valparaíso'
@@ -100,10 +108,30 @@ styles = {
     }
 }
 
-available_indicators = ['Regiones','Comunas','Chile']
+available_indicators = ['Regiones','Comunas','Pacientes COVID-19 en UCI por región']
 
 
-app.layout = html.Div([
+colors = {
+    'background': '#FFFFFF',
+    'text': '#7FDBFF'
+}
+
+
+app.layout = html.Div(style={'backgroundColor': colors['background']}, children=[
+
+     html.H1(
+        children='Dash COVID-19 en Chile',
+        style={
+            'textAlign': 'center',
+            'color': colors['text']
+        }
+    ),
+
+
+    html.Div(children='Tipos de Busqueda', style={
+        'textAlign': 'center',
+        'color': colors['text']
+    }),
 
       html.Div([
             dcc.Dropdown(
@@ -116,7 +144,6 @@ app.layout = html.Div([
       ),
 
 
-
     html.Div([
         dcc.Graph(
             id='basic-interactions',
@@ -127,7 +154,7 @@ app.layout = html.Div([
     html.Div([
         dcc.Graph(id='x-time-series'),
         dcc.Graph(id='y-time-series'),
-         dcc.Graph(id='z-time-series'),
+        dcc.Graph(id='z-time-series'),
     ], style={'display': 'inline-block', 'width': '49%'}),
 
 
@@ -138,35 +165,41 @@ app.layout = html.Div([
 
 #casos diarios
 def create_time_series(dff,title,caso):
-
-	if(caso=='c'):
-		color="#33CFA5"
-	elif(caso=='f'):
-		color="#F11013"
-	else:
-		color="#10CBF1"
-	return {
-        'data': [dict(
-            x=dff.fecha,
-            y=dff.casos,
-            mode='lines+markers',
-            line=dict(color=color)
-        )],
-        'layout': {
-            'height': 225,
-            'margin': {'l': 20, 'b': 30, 'r': 10, 't': 10},
-            'annotations': [{
-                'x': 0, 'y': 0.85, 'xanchor': 'left', 'yanchor': 'bottom',
-                'xref': 'paper', 'yref': 'paper', 'showarrow': False,
-                'align': 'left', 'bgcolor': '#33CFA5',
-                 'text': title
-
-            }],
-
-         
-
-        }
+    if(dff.empty):
+        return {
+       
     }
+    else:
+
+        fecha =dff.fecha.iloc[-1]
+        if(caso=='c'):
+            color="#33CFA5"
+        elif(caso=='f'):
+            color="#F11013"
+        else:
+            color="#10CBF1"
+        return {
+            'data': [dict(
+                x=dff.fecha,
+                y=dff.casos,
+                mode='lines+markers',
+                line=dict(color=color)
+            )],
+            'layout': {
+                'height': 225,
+                'margin': {'l': 20, 'b': 30, 'r': 10, 't': 10},
+                'annotations': [{
+                    'x': 0, 'y': 0.85, 'xanchor': 'left', 'yanchor': 'bottom',
+                    'xref': 'paper', 'yref': 'paper', 'showarrow': False,
+                    'align': 'left', 'bgcolor': '#33CFA5',
+                     'text': title+' Actualizado: '+fecha
+
+                }],
+
+             
+
+            }
+        }
 
 
 
@@ -189,7 +222,7 @@ def update_graph(value):
                                        
                                    ))
         fig.update_layout(mapbox_style="carto-positron",
-                      mapbox_zoom=3,height=600,mapbox_center = {"lat": -30.0000000, "lon": -71.0000000},clickmode ='event+select')
+                      mapbox_zoom=3,height=700,mapbox_center = {"lat": -30.0000000, "lon": -71.0000000},clickmode ='event+select')
         fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
 
 
@@ -254,8 +287,20 @@ def update_y_timeseries(clickData,value):
                                      "casos": data_crec_por_dia[data_crec_por_dia['Fecha']=='Casos totales'].iloc[0,1:].values})
         title='Casos Acumulados: Chile'
         caso='c'
+    elif(value=='Pacientes COVID-19 en UCI por región'):
+        country_name = clickData['points'][0]['location']
+        prueba2 = hosp_region[hosp_region['Region']==country_name]
 
-
+        if(prueba2.empty):
+            casos_diarios_df = pd.DataFrame()
+            title=[]
+            caso=[]
+        else:
+            country_name = clickData['points'][0]['location']
+            casos_diarios_df = pd.DataFrame({"fecha": fecha_hosp_region, 
+                                         "casos": hosp_region[hosp_region['Region']==country_name].iloc[0,3:].values})
+            title=' Pacientes COVID-19 en UCI: '+country_name
+            caso='c'
     return create_time_series(casos_diarios_df,title,caso)
 
 
@@ -304,7 +349,11 @@ def update_y_timeseries(clickData,value):
                                           "casos": data_crec_por_dia[data_crec_por_dia['Fecha']=='Fallecidos'].iloc[0,1:].values})
         title='Fallecidos Acumulados: Chile'
         caso='f'
-  
+
+    elif(value=='Pacientes COVID-19 en UCI por región'):
+        fallecidos_diarios_df = pd.DataFrame()
+        title=[]
+        caso=[]
 
 
     return create_time_series(fallecidos_diarios_df,title,caso)
@@ -354,7 +403,16 @@ def update_y_timeseries(clickData,value):
         caso='uci'
         title='Casos Activos: Chile'
 
+    elif(value=='Pacientes COVID-19 en UCI por región'):
+        activos_diarios_df = pd.DataFrame()
+        title=[]
+        caso=[]
+
     return create_time_series(activos_diarios_df,title,caso)
+
+
+#HOSPITALIZACIONES
+
 
 
 
