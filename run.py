@@ -8,10 +8,17 @@ import json
 import plotly.graph_objs as go
 import plotly.express as px
 
+from flask import Flask
+import os
+
+
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
-app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
+server = Flask(__name__)
+server.secret_key = os.environ.get('secret_key', 'secret')
+app = dash.Dash(name = __name__, server = server,external_stylesheets=external_stylesheets)
+app.config.suppress_callback_exceptions = True
 
 
 casos_por_dia = pd.read_csv('https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master/output/producto13/CasosNuevosCumulativo.csv')
