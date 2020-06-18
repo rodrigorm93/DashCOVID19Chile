@@ -74,6 +74,9 @@ ultima_fecha_cl= ultima_fecha_cl[-1]
 
 
 
+
+
+
 #CHILE
 
 fecha_casos_totales =data_crec_por_dia.columns
@@ -101,14 +104,140 @@ fecha_uci=grupo_uci_reg.columns
 fecha_uci= fecha_uci[3:]
 
 
+#MUNDO
+
+data_confirmed = pd.read_csv('https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv')
+deaths_data = pd.read_csv('https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv')
+recoveries_df = pd.read_csv('https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_recovered_global.csv')
+
+mundo = requests.get('https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json')
+geo_mundo = json.loads(mundo.content)
+
+
+data_confirmed = pd.read_csv('https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv')
+
+ultima_fecha_mundo = data_confirmed.columns
+ultima_fecha_mundo= ultima_fecha_mundo[-1]
+
+
+data_confirmed.loc[data_confirmed['Country/Region'] == 'US', "Country/Region"] = 'United States of America'
+
+data_confirmed.loc[data_confirmed['Country/Region'] == 'US', "Country/Region"] = 'United States of America'
+data_confirmed.loc[data_confirmed['Country/Region'] == 'Congo (Kinshasa)', "Country/Region"] = 'Democratic Republic of the Congo'
+
+#AGREGAR French Guiana COMO PAIS Y NO PROVICNCIA DE FRANCIA PERO SE SUMAR A EL TOTAL DE FRANCIA IGUAL
+data_confirmed = data_confirmed.append({'Country/Region':'French Guiana',ultima_fecha_mundo: int(data_confirmed[data_confirmed['Province/State']=='French Guiana'][ultima_fecha_mundo])}, ignore_index=True)
+
+data_confirmed.loc[data_confirmed['Country/Region'] == "Cote d'Ivoire", "Country/Region"] = 'Ivory Coast'
+data_confirmed.loc[data_confirmed['Country/Region'] == 'Congo (Brazzaville)', "Country/Region"] = 'Republic of the Congo'
+data_confirmed.loc[data_confirmed['Country/Region'] == 'Tanzania', "Country/Region"] = 'United Republic of Tanzania'
+data_confirmed.loc[data_confirmed['Country/Region'] == 'Korea, South', "Country/Region"] = 'South Korea'
+
+fecha_casos_m =data_confirmed.columns
+fecha_casos_m= fecha_casos_m[4:]
+
+d = data_confirmed.groupby(['Country/Region']).sum()
+
+paises = data_confirmed['Country/Region'].drop_duplicates()
+paises = sorted(paises)
+
+data_mundo_mapa = pd.DataFrame({'Country': paises,'Casos':d[ultima_fecha_mundo]})
+
+
+
+#casos recuperados
+ultima_fecha_mundo_rec = recoveries_df.columns
+ultima_fecha_mundo_rec= ultima_fecha_mundo_rec[-1]
+
+
+recoveries_df.loc[recoveries_df['Country/Region'] == 'US', "Country/Region"] = 'United States of America'
+
+recoveries_df.loc[recoveries_df['Country/Region'] == 'US', "Country/Region"] = 'United States of America'
+recoveries_df.loc[recoveries_df['Country/Region'] == 'Congo (Kinshasa)', "Country/Region"] = 'Democratic Republic of the Congo'
+
+#AGREGAR French Guiana COMO PAIS Y NO PROVICNCIA DE FRANCIA PERO SE SUMAR A EL TOTAL DE FRANCIA IGUAL
+recoveries_df = recoveries_df.append({'Country/Region':'French Guiana',ultima_fecha_mundo_rec: int(data_confirmed[data_confirmed['Province/State']=='French Guiana'][ultima_fecha_mundo_rec])}, ignore_index=True)
+
+recoveries_df.loc[recoveries_df['Country/Region'] == "Cote d'Ivoire", "Country/Region"] = 'Ivory Coast'
+recoveries_df.loc[recoveries_df['Country/Region'] == 'Congo (Brazzaville)', "Country/Region"] = 'Republic of the Congo'
+recoveries_df.loc[recoveries_df['Country/Region'] == 'Tanzania', "Country/Region"] = 'United Republic of Tanzania'
+recoveries_df.loc[recoveries_df['Country/Region'] == 'Korea, South', "Country/Region"] = 'South Korea'
+
+
+fecha_rec_m =recoveries_df.columns
+fecha_rec_m= fecha_rec_m[4:]
+
+d2 = recoveries_df.groupby(['Country/Region']).sum()
+
+paises = recoveries_df['Country/Region'].drop_duplicates()
+paises = sorted(paises)
+v = d2[ultima_fecha_mundo_rec].apply(str)
+data_mundo_mapa_rec = pd.DataFrame({'Country': paises,'Recuperados':v})
+
+#casos fallecidos
+ultima_fecha_fall_mundo = deaths_data.columns
+ultima_fecha_fall_mundo= ultima_fecha_fall_mundo[-1]
+
+
+deaths_data.loc[deaths_data['Country/Region'] == 'US', "Country/Region"] = 'United States of America'
+
+deaths_data.loc[deaths_data['Country/Region'] == 'US', "Country/Region"] = 'United States of America'
+deaths_data.loc[deaths_data['Country/Region'] == 'Congo (Kinshasa)', "Country/Region"] = 'Democratic Republic of the Congo'
+
+#AGREGAR French Guiana COMO PAIS Y NO PROVICNCIA DE FRANCIA PERO SE SUMAR A EL TOTAL DE FRANCIA IGUAL
+deaths_data = deaths_data.append({'Country/Region':'French Guiana',ultima_fecha_fall_mundo: int(data_confirmed[data_confirmed['Province/State']=='French Guiana'][ultima_fecha_fall_mundo])}, ignore_index=True)
+
+deaths_data.loc[deaths_data['Country/Region'] == "Cote d'Ivoire", "Country/Region"] = 'Ivory Coast'
+deaths_data.loc[deaths_data['Country/Region'] == 'Congo (Brazzaville)', "Country/Region"] = 'Republic of the Congo'
+deaths_data.loc[deaths_data['Country/Region'] == 'Tanzania', "Country/Region"] = 'United Republic of Tanzania'
+deaths_data.loc[deaths_data['Country/Region'] == 'Korea, South', "Country/Region"] = 'South Korea'
+d2 = deaths_data.groupby(['Country/Region']).sum()
+
+
+fecha_fall_m =deaths_data.columns
+fecha_fall_m= fecha_fall_m[4:]
+
+paises = deaths_data['Country/Region'].drop_duplicates()
+paises = sorted(paises)
+
+data_mundo_mapa_death = pd.DataFrame({'Country': paises,'Fallecidos':d2[ultima_fecha_fall_mundo]})
+
+data_cd = pd.merge(data_mundo_mapa, data_mundo_mapa_death, on='Country')
+data_cdr =  pd.merge(data_cd, data_mundo_mapa_rec, on='Country')
+
+
+
+#grupo fallecidos
+
+grupo_fallecidos = pd.read_csv('https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master/output/producto10/FallecidosEtario.csv')
+fecha_grupo_fallecidos=grupo_fallecidos.columns[-1]
+
+fecha_ge = grupo_fallecidos.columns[1:]
+
+#figuras:
+
+
+fig3 = px.pie(grupo_fallecidos, values=fecha_grupo_fallecidos, names='Grupo de edad')
+fig3.update_traces(textposition='inside')
+fig3.update_layout(uniformtext_minsize=9, uniformtext_mode='hide',clickmode ='event+select')
+
+#grafico de barra grupo de edad
+fig2 = go.Figure(go.Bar(
+            x=grupo_fallecidos[fecha_grupo_fallecidos].values,
+            y= grupo_fallecidos['Grupo de edad'],
+            orientation='h'))
+fig2.update_layout(clickmode ='event+select')
+
+
+available_indicators = ['Regiones','Comunas','Pacientes COVID-19 en UCI por región','Mundo entero']
+
+
 styles = {
     'pre': {
         'border': 'thin lightgrey solid',
         'overflowX': 'scroll'
     }
 }
-
-available_indicators = ['Regiones','Comunas','Pacientes COVID-19 en UCI por región']
 
 
 colors = {
@@ -167,11 +296,37 @@ app.layout = html.Div(style={'backgroundColor': colors['background']}, children=
         )
     ], style={'width': '49%','float': 'left', 'display': 'inline-block', 'padding': '0 20'}),
 
+
     html.Div([
         dcc.Graph(id='x-time-series'),
         dcc.Graph(id='y-time-series'),
         dcc.Graph(id='z-time-series'),
     ], style={'display': 'inline-block', 'width': '49%'}),
+
+
+
+   html.H3(
+        children='Personas fallecidas por grupos de edad',
+        style={
+            'textAlign': 'center',
+            'color': colors['text'],
+            'width': '49%', 'padding-top': '30px'
+
+        }
+    ),
+
+    html.Div([
+        dcc.Graph(id='grupo-time-series'),
+    ], style={'display': 'inline-block','width': '49%', 'float': 'right'}),
+
+
+    html.Div([
+        dcc.Graph(id='grafic-bar-grupo-falle',
+                 figure = fig2,
+                 clickData={'points': [{'label': '<=39 '}]}
+                 ),
+
+    ],style={'display': 'inline-block', 'width': '49%'}),
 
 
    
@@ -203,9 +358,9 @@ def create_time_series(dff,title,caso):
             )],
             'layout': {
                 'height': 225,
-                'margin': {'l': 20, 'b': 30, 'r': 10, 't': 10},
+                'margin': {'l': 60, 'b': 30, 'r': 10, 't': 10},
                 'annotations': [{
-                    'x': 0, 'y': 0.85, 'xanchor': 'left', 'yanchor': 'bottom',
+                    'x': 0, 'y': 0.90, 'xanchor': 'left', 'yanchor': 'bottom',
                     'xref': 'paper', 'yref': 'paper', 'showarrow': False,
                     'align': 'left', 'bgcolor': '#33CFA5',
                      'text': title+' Actualizado: '+fecha
@@ -215,6 +370,40 @@ def create_time_series(dff,title,caso):
              
 
             }
+        }
+
+
+
+#grupos de edad
+
+def create_time_series_grupo_edad(dff,title):
+    if(dff.empty):
+        return {
+       
+    }
+    
+    return {
+            'data': [dict(
+                x=dff.fecha,
+                y=dff.casos,
+                mode='lines+markers',
+                line=dict(color='#F11013')
+            )],
+            'layout': {
+                'height': 300,
+                'margin': {'l': 50, 'b': 20, 'r': 30, 't': 100},
+                'annotations': [{
+                    'x': 0, 'y': 0.90, 'xanchor': 'left', 'yanchor': 'bottom',
+                    'xref': 'paper', 'yref': 'paper', 'showarrow': False,
+                    'align': 'left', 'bgcolor': '#33CFA5',
+                     'text': title+' Actualizado:'
+
+                }],
+
+             
+
+            }
+
         }
 
 
@@ -242,6 +431,26 @@ def update_graph(value):
         fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
 
 
+    elif(value=='Mundo entero'):
+        fig = go.Figure(go.Choroplethmapbox(geojson=geo_mundo, locations=data_cdr.Country, z=data_cdr.Casos,
+                                    colorscale="Viridis", zmin=0, zmax=200000,
+                                    featureidkey="properties.name",
+                                    colorbar = dict(thickness=20, ticklen=3),
+                                    marker_opacity=0.2, marker_line_width=0,  
+                                    text=data_cdr['Fallecidos'],
+                                      hovertemplate = '<b>País</b>: <b>'+data_cdr['Country']+'</b>'+
+                                            '<br><b>Casos </b>: %{z}<br>'+
+                                            '<b>Fallecidos: </b>:%{text}<br>'+
+                                            '<b>Recuperados</b>: <b>'+data_cdr['Recuperados'] 
+                                   
+                                        ))
+
+
+        fig.update_layout(mapbox_style="carto-positron",
+                                mapbox_zoom=1,height=700,mapbox_center = {"lat": 0, "lon": 0},clickmode ='event+select')
+        fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
+
+
     else:
 
         fig = go.Figure(go.Choroplethmapbox(geojson= geo_region   , locations=data_region.Region, z=data_region.Casos,
@@ -251,6 +460,7 @@ def update_graph(value):
         fig.update_layout(mapbox_style="carto-positron",
                           mapbox_zoom=3,height=700,mapbox_center = {"lat": -30.0000000, "lon": -71.0000000},clickmode ='event+select')
         fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
+
 
 
 
@@ -317,6 +527,22 @@ def update_y_timeseries(clickData,value):
                                          "casos": hosp_region[hosp_region['Region']==country_name].iloc[0,3:].values})
             title=' Pacientes COVID-19 en UCI: '+country_name
             caso='c'
+    elif(value=='Mundo entero'):
+        country_name = clickData['points'][0]['location']
+        prueba2 = data_confirmed[data_confirmed['Country/Region']==country_name]
+        if(prueba2.empty):
+            casos_diarios_df = pd.DataFrame()
+            title=[]
+            caso=[]
+        else:
+            country_name = clickData['points'][0]['location']
+            casos_diarios_df = pd.DataFrame({"fecha": fecha_casos_m, 
+                                         "casos": data_confirmed[data_confirmed['Country/Region']==country_name].iloc[0,4:].values})
+            title='Casos Acumulados: '+country_name
+            caso='c'
+
+
+
     return create_time_series(casos_diarios_df,title,caso)
 
 
@@ -371,6 +597,20 @@ def update_y_timeseries(clickData,value):
         title=[]
         caso=[]
 
+    elif(value=='Mundo entero'):
+        country_name = clickData['points'][0]['location']
+        prueba2 = data_confirmed[data_confirmed['Country/Region']==country_name]
+        if(prueba2.empty):
+            fallecidos_diarios_df = pd.DataFrame()
+            title=[]
+            caso=[]
+        else:
+            country_name = clickData['points'][0]['location']
+            fallecidos_diarios_df = pd.DataFrame({"fecha": fecha_fall_m, 
+                                         "casos": deaths_data[deaths_data['Country/Region']==country_name].iloc[0,4:].values})
+            title='Fallecidos Acumulados: '+country_name
+            caso='f'
+
 
     return create_time_series(fallecidos_diarios_df,title,caso)
 
@@ -423,12 +663,42 @@ def update_y_timeseries(clickData,value):
         activos_diarios_df = pd.DataFrame()
         title=[]
         caso=[]
+    elif(value=='Mundo entero'):
+        country_name = clickData['points'][0]['location']
+        prueba2 = data_confirmed[data_confirmed['Country/Region']==country_name]
+        if(prueba2.empty):
+            activos_diarios_df = pd.DataFrame()
+            title=[]
+            caso=[]
+        else:
+            country_name = clickData['points'][0]['location']
+            activos_diarios_df = pd.DataFrame({"fecha": fecha_rec_m, 
+                                         "casos": recoveries_df[recoveries_df['Country/Region']==country_name].iloc[0,4:].values})
+            title='Recuperados Acumulados: '+country_name
+            caso='uci'
 
     return create_time_series(activos_diarios_df,title,caso)
 
 
-#HOSPITALIZACIONES
+#GRUPOS DE EDAD
 
+
+@app.callback(
+    dash.dependencies.Output('grupo-time-series', 'figure'),
+    [dash.dependencies.Input('grafic-bar-grupo-falle', 'clickData'),])
+def update_y_timeseries_grupo_edad(clickData):
+    grupo_edad = clickData['points'][0]['label']
+    print(grupo_edad)
+    prueba = grupo_fallecidos[grupo_fallecidos['Grupo de edad']==grupo_edad]
+    if(prueba.empty):
+        grupo_fallecidos_df = pd.DataFrame()
+        title=[]
+    else:
+        grupo_edad = clickData['points'][0]['label']
+        grupo_fallecidos_df = pd.DataFrame({"fecha": fecha_ge, 
+                                         "casos": grupo_fallecidos[grupo_fallecidos['Grupo de edad']==grupo_edad].iloc[0,1:].values})
+        title='Evolución de Casos de Fallecidos Grupo de Edad: '+grupo_edad
+    return create_time_series_grupo_edad(grupo_fallecidos_df,title)
 
 
 
