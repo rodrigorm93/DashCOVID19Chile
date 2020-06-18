@@ -213,6 +213,8 @@ grupo_fallecidos = pd.read_csv('https://raw.githubusercontent.com/MinCiencia/Dat
 fecha_grupo_fallecidos=grupo_fallecidos.columns[-1]
 
 fecha_ge = grupo_fallecidos.columns[1:]
+total_fall_grupo = grupo_fallecidos[fecha_grupo_fallecidos].sum()
+
 
 #figuras:
 
@@ -376,35 +378,49 @@ def create_time_series(dff,title,caso):
 
 #grupos de edad
 
-def create_time_series_grupo_edad(dff,title):
+def create_time_series_grupo_edad(dff,title,grupo):
     if(dff.empty):
         return {
        
     }
     
-    return {
-            'data': [dict(
-                x=dff.fecha,
-                y=dff.casos,
-                mode='lines+markers',
-                line=dict(color='#F11013')
-            )],
-            'layout': {
-                'height': 300,
-                'margin': {'l': 50, 'b': 20, 'r': 30, 't': 100},
-                'annotations': [{
-                    'x': 0, 'y': 0.90, 'xanchor': 'left', 'yanchor': 'bottom',
-                    'xref': 'paper', 'yref': 'paper', 'showarrow': False,
-                    'align': 'left', 'bgcolor': '#33CFA5',
-                     'text': title+' Actualizado:'
+    fig = go.Figure()
 
-                }],
+    total_grupo_fall_df = pd.DataFrame({"Grupo":[ grupo,'Total'],"Fallecidos": [grupo_fallecidos[grupo_fallecidos['Grupo de edad']==grupo][fecha_grupo_fallecidos].sum(),total_fall_grupo]})
 
-             
+    fig.add_trace(go.Pie(labels=total_grupo_fall_df.Grupo, values=total_grupo_fall_df.Fallecidos))
 
-            }
+    fig.add_trace(go.Scatter(x=dff.fecha,
+                       y=dff.casos,
+                       name=grupo,
+                       visible=False,
+                       line=dict(color="red")))
 
-        }
+
+    fig.update_layout(
+            updatemenus=[
+                dict(
+                    active=0,
+                    buttons=list([
+                        dict(label="Total Fallecidos",
+                             method="update",
+                             args=[{"visible": [True, False]},
+                                   {"title": "Porcentaje Total vs Grupo de "+grupo,
+                                    "annotations": []}]),
+                        dict(label=grupo,
+                             method="update",
+                             args=[{"visible": [False, True]},
+                                   {"title": "Evolución de Casos "+grupo,
+                                    "annotations": []}]),
+
+            ]),
+                )
+            ])
+
+        # Set title
+    fig.update_layout(title_text="Porcentaje Total vs Grupo de "+grupo)
+
+    return fig
 
 
 
@@ -688,7 +704,7 @@ def update_y_timeseries(clickData,value):
     [dash.dependencies.Input('grafic-bar-grupo-falle', 'clickData'),])
 def update_y_timeseries_grupo_edad(clickData):
     grupo_edad = clickData['points'][0]['label']
-    print(grupo_edad)
+    
     prueba = grupo_fallecidos[grupo_fallecidos['Grupo de edad']==grupo_edad]
     if(prueba.empty):
         grupo_fallecidos_df = pd.DataFrame()
@@ -698,7 +714,7 @@ def update_y_timeseries_grupo_edad(clickData):
         grupo_fallecidos_df = pd.DataFrame({"fecha": fecha_ge, 
                                          "casos": grupo_fallecidos[grupo_fallecidos['Grupo de edad']==grupo_edad].iloc[0,1:].values})
         title='Evolución de Casos de Fallecidos Grupo de Edad: '+grupo_edad
-    return create_time_series_grupo_edad(grupo_fallecidos_df,title)
+    return create_time_series_grupo_edad(grupo_fallecidos_df,title,grupo_edad)
 
 
 
