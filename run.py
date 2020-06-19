@@ -470,9 +470,13 @@ def create_time_series_grupo_edad(dff,title,grupo,caso):
         fig.add_trace(go.Scatter(x=dff.fecha,
                            y=dff.casos,
                            name=grupo,
+                           text=dff.casos,
                            visible=False,
+                            mode='lines+markers',
                            line=dict(color="red"),
-                           hoverinfo="name+x+text"
+                           hoverinfo="name+x+text",
+                           showlegend=False
+                           
                 
                            ))
 
