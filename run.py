@@ -23,6 +23,9 @@ app = dash.Dash(name = __name__, server = server,external_stylesheets=external_s
 app.config.suppress_callback_exceptions = True
 
 
+
+
+
 casos_por_dia = pd.read_csv('https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master/output/producto13/CasosNuevosCumulativo.csv')
 data_chile = pd.read_csv('https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master/output/producto3/CasosTotalesCumulativo.csv')
 fallecidos_por_dia = pd.read_csv('https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master/output/producto14/FallecidosCumulativo.csv')
@@ -216,6 +219,21 @@ fecha_ge = grupo_fallecidos.columns[1:]
 total_fall_grupo = grupo_fallecidos[fecha_grupo_fallecidos].sum()
 
 
+
+#grupos casos
+grupo_casos_genero= pd.read_csv('https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master/output/producto16/CasosGeneroEtario.csv')
+fecha_grupo_edad = grupo_casos_genero.columns[-1]
+
+grupo_edad = grupo_casos_genero.iloc[0:17,0]
+data_casos_grupo_edad_mf = pd.DataFrame({'Grupo de edad': grupo_edad, fecha_grupo_edad : 0})
+
+fila = 0
+for grupo in data_casos_grupo_edad_mf['Grupo de edad']:
+    suma_casos_MF = grupo_casos_genero[grupo_casos_genero['Grupo de edad'] == grupo].iloc[:,-1].sum()
+    data_casos_grupo_edad_mf.iloc[fila,1] = suma_casos_MF
+    fila=fila+1
+
+
 #figuras:
 
 
@@ -223,17 +241,12 @@ fig3 = px.pie(grupo_fallecidos, values=fecha_grupo_fallecidos, names='Grupo de e
 fig3.update_traces(textposition='inside')
 fig3.update_layout(uniformtext_minsize=9, uniformtext_mode='hide',clickmode ='event+select')
 
-#grafico de barra grupo de edad
-fig2 = go.Figure(go.Bar(
-            x=grupo_fallecidos[fecha_grupo_fallecidos].values,
-            y= grupo_fallecidos['Grupo de edad'],
-            orientation='h'))
-fig2.update_layout(clickmode ='event+select')
+
 
 
 available_indicators = ['Regiones','Comunas','Pacientes COVID-19 en UCI por región','Mundo entero']
 
-
+#Colores
 styles = {
     'pre': {
         'border': 'thin lightgrey solid',
@@ -243,7 +256,7 @@ styles = {
 
 
 colors = {
-    'background': '#FFFFFF',
+    'background': '#f5f6f7',
     'text': '#7FDBFF'
 }
 
@@ -253,86 +266,133 @@ colors2 = {
 }
 
 
-app.layout = html.Div(style={'backgroundColor': colors['background']}, children=[
+axis_color = {"dark": "#EBF0F8", "light": "#506784"}
+marker_color = {"dark": "#f2f5fa", "light": "#2a3f5f"}
 
-     html.H1(
-        children='Dash COVID-19 en Chile',
-        style={
-            'textAlign': 'center',
-            'color': colors['text']
-        }
-    ),
-
- html.Div(children='Desarrollado por Rodrigo Ramirez', style={
-        'textAlign': 'center',
-        'color': colors2['text']
-    }),
- html.Div(children='Contacto: ra.ramirez1993@gmail.com', style={
-        'textAlign': 'center',
-        'color': colors2['text']
-    }),
-
-    html.Div(children='Tipos de Busqueda', style={
-        'color': colors['text'],
-        'textAlign': 'center',
-        'width': '49%','float': 'right', 'display': 'inline-block',  'padding': '0px 20px 20px 20px'
-    }
-),
-
-
-      html.Div([
-            dcc.Dropdown(
-                id='crossfilter-xaxis-column',
-                options=[{'label': i, 'value': i} for i in available_indicators],
-                value='Regiones'
-            ),
-          
-        ],style={'width': '49%','float': 'right', 'display': 'inline-block',  'padding': '0px 20px 20px 20px'}
-      ),
-
-
-    html.Div([
-        dcc.Graph(
-            id='basic-interactions',
-            clickData={'points': [{'location': 'Chile'}]}
-        )
-    ], style={'width': '49%','float': 'left', 'display': 'inline-block', 'padding': '0 20'}),
-
-
-    html.Div([
-        dcc.Graph(id='x-time-series'),
-        dcc.Graph(id='y-time-series'),
-        dcc.Graph(id='z-time-series'),
-    ], style={'display': 'inline-block', 'width': '49%'}),
+theme = {
+    "dark": False,
+    "primary": "#447EFF",
+    "secondary": "#D3D3D3",
+    "detail": "#D3D3D3",
+}
 
 
 
-   html.H3(
-        children='Personas fallecidas por grupos de edad',
-        style={
-            'textAlign': 'center',
-            'color': colors['text'],
-            'width': '49%', 'padding-top': '30px'
 
-        }
-    ),
+app.layout = html.Div(style={'backgroundColor': colors['background']}, 
 
-    html.Div([
-        dcc.Graph(id='grupo-time-series'),
-    ], style={'display': 'inline-block','width': '49%', 'float': 'right'}),
+    
+    children=[
+
+    html.H1(
+            children='Dash COVID-19 en Chile',
+                    style={
+                        'textAlign': 'center',
+                        'color': colors['text']
+                    }
+                ),
+
+    html.Div(children='Desarrollado por Rodrigo Ramirez', style={
+                    'textAlign': 'center',
+                    'color': colors2['text']
+                }),
+    html.Div(
+            className="app_main_content",
+            children=[
+
+                html.Div(
+                    id="dropdown-select-outer",
+                    children=[
+                        html.Div(
+                            [
+                                html.P("Busqueda:"),
+                                dcc.Dropdown(
+                                    id='crossfilter-xaxis-column',
+                                    options=[{'label': i, 'value': i} for i in available_indicators],
+                                    value='Regiones'
+                                   
+                                ),
+                            ],  
+                            className="selector",
+                         
+                        ),
+                ],style={'width': '49%','padding-top': '20px','padding-left': '20px'}),      
 
 
-    html.Div([
-        dcc.Graph(id='grafic-bar-grupo-falle',
-                 figure = fig2,
-                 clickData={'points': [{'label': '<=39 '}]}
-                 ),
-
-    ],style={'display': 'inline-block', 'width': '49%'}),
 
 
-   
-])
+                html.Div( 
+                    id="top-row",
+                    className="row",
+                    children=[
+
+
+
+
+                    html.Div([
+                        dcc.Graph(
+                            id='basic-interactions',
+                            clickData={'points': [{'location': 'Chile'}]}
+                        )
+                    ],style={'width': '49%','display': 'inline-block','padding-left': '20px'}),
+            
+                  
+                    html.Div([
+
+
+                    dcc.Graph(id='x-time-series'),
+                    dcc.Graph(id='y-time-series'),
+                    dcc.Graph(id='z-time-series'),
+                      ],style={'width': '49%','display': 'inline-block','padding-left': '20px'}),
+
+
+                ]),
+
+
+               html.H3(
+                    children='Grupos de edad',
+                    className="Title",
+                    style={
+                        'textAlign': 'center',
+                        'color': colors['text'],
+                        'width': '49%', 'padding-top': '30px'
+
+                    }
+                ),
+
+            #ABAJO
+                html.Div(
+                    id="bottom-row",
+                    className="row",
+                    children=[
+
+
+                html.Div([
+
+                    dcc.RadioItems(
+                            id='crossfilter-xaxis-type',
+                            options=[{'label': i, 'value': i} for i in ['Fallecidos', 'Casos']],
+                            value='Fallecidos',
+                            labelStyle={'display': 'inline-block','padding-left': '80px'}
+                    ),
+
+                    dcc.Graph(id='grafic-bar-grupo-falle',
+                             clickData={'points': [{'label': '<=39 '}]}
+                             ),
+
+                ],style={'display': 'inline-block', 'width': '49%','padding-top': '10px','padding-left': '20px','float': 'left'}),
+
+
+                html.Div([
+
+                dcc.Loading(dcc.Graph(id='grupo-time-series')),
+
+                ],style={'display': 'inline-block','width': '49%','padding-left': '20px'}),
+
+
+                ])
+
+])])
 
 
 
@@ -345,6 +405,7 @@ def create_time_series(dff,title,caso):
     else:
 
         fecha =dff.fecha.iloc[-1]
+        axis = axis_color["light"]
         if(caso=='c'):
             color="#33CFA5"
         elif(caso=='f'):
@@ -356,11 +417,11 @@ def create_time_series(dff,title,caso):
                 x=dff.fecha,
                 y=dff.casos,
                 mode='lines+markers',
-                line=dict(color=color)
+                line=dict(color=color),
             )],
             'layout': {
-                'height': 225,
-                'margin': {'l': 60, 'b': 30, 'r': 10, 't': 10},
+                'height': 220,
+                'margin': {'l': 50, 'b': 30, 'r': 10, 't': 10},
                 'annotations': [{
                     'x': 0, 'y': 0.90, 'xanchor': 'left', 'yanchor': 'bottom',
                     'xref': 'paper', 'yref': 'paper', 'showarrow': False,
@@ -368,10 +429,14 @@ def create_time_series(dff,title,caso):
                      'text': title+' Actualizado: '+fecha
 
                 }],
-
-             
-
+            
+    
             }
+
+           
+
+        
+
         }
 
 
@@ -414,11 +479,22 @@ def create_time_series_grupo_edad(dff,title,grupo):
                                     "annotations": []}]),
 
             ]),
+
+            direction="down",
+            pad={"r": 20, "t": 1},
+            showactive=True,
+            x=0.3,
+            xanchor="left",
+            y=1.5,
+            yanchor="top"
                 )
             ])
 
+
         # Set title
     fig.update_layout(title_text="Porcentaje Total vs Grupo de "+grupo)
+   
+
 
     return fig
 
@@ -718,8 +794,41 @@ def update_y_timeseries_grupo_edad(clickData):
 
 
 
+@app.callback(
+    dash.dependencies.Output('grafic-bar-grupo-falle', 'figure'),
+    [dash.dependencies.Input('crossfilter-xaxis-type', 'value'),])
+def update_grafico_bar_grupo_edad(value):
+
+    if(value == 'Fallecidos'):
+        data = grupo_fallecidos
+        fecha = fecha_grupo_fallecidos
+
+        fig2 = go.Figure(go.Bar(
+                    x=data[fecha].values,
+                    y= data['Grupo de edad'],
+                    orientation='h'))
+        fig2.update_layout(clickmode ='event+select')
+
+    else:
+
+        data = data_casos_grupo_edad_mf
+        fecha = fecha_grupo_edad
+
+        fig2 = go.Figure(go.Bar(
+                    x=data[fecha].values,
+                    y= data['Grupo de edad'],
+                    orientation='h'))
+        fig2.update_layout()
+
+    return fig2
+
+
+
 if __name__ == '__main__':
     app.run_server(debug=True)
 
 #creado:rodrigo ramirez 
 #contacto:ra.ramirez1993@gmail.com
+
+
+
