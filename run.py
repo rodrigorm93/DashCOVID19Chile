@@ -386,6 +386,7 @@ app.layout = html.Div(
                     
                     html.Div(
                         className="four columns",
+                         style={'width': '38%'},
 
                         children=dcc.Loading(
                         children=dcc.Graph(id='grupo-time-series')),
