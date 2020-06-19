@@ -8,18 +8,18 @@ import json
 import plotly.graph_objs as go
 import plotly.express as px
 
+
 from flask import Flask
 import os
 
 
-external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+app = dash.Dash(
+    __name__,
+    meta_tags=[{"name": "viewport", "content": "width=device-width, initial-scale=1"}],
+)
 
+server = app.server
 
-
-
-server = Flask(__name__)
-server.secret_key = os.environ.get('secret_key', 'secret')
-app = dash.Dash(name = __name__, server = server,external_stylesheets=external_stylesheets)
 app.config.suppress_callback_exceptions = True
 
 
@@ -233,6 +233,15 @@ for grupo in data_casos_grupo_edad_mf['Grupo de edad']:
     data_casos_grupo_edad_mf.iloc[fila,1] = suma_casos_MF
     fila=fila+1
 
+total = data_casos_grupo_edad_mf[fecha_grupo_edad].sum()
+ninos = data_casos_grupo_edad_mf.iloc[0:3][fecha_grupo_edad].sum()
+jovenes = data_casos_grupo_edad_mf.iloc[3:6][fecha_grupo_edad].sum()
+adultos = data_casos_grupo_edad_mf.iloc[6:12][fecha_grupo_edad].sum()
+adultos_mayores = data_casos_grupo_edad_mf.iloc[12:17][fecha_grupo_edad].sum()
+
+data_div_edad = pd.DataFrame({'Division Edad': ['Niños','Jóvenes','Adultos','Adultos mayores'], 
+                              'Total Casos': [ninos,jovenes,adultos,adultos_mayores]})
+
 
 #figuras:
 
@@ -246,14 +255,6 @@ fig3.update_layout(uniformtext_minsize=9, uniformtext_mode='hide',clickmode ='ev
 
 available_indicators = ['Regiones','Comunas','Pacientes COVID-19 en UCI por región','Mundo entero']
 
-#Colores
-styles = {
-    'pre': {
-        'border': 'thin lightgrey solid',
-        'overflowX': 'scroll'
-    }
-}
-
 
 colors = {
     'background': '#f5f6f7',
@@ -266,42 +267,44 @@ colors2 = {
 }
 
 
-axis_color = {"dark": "#EBF0F8", "light": "#506784"}
-marker_color = {"dark": "#f2f5fa", "light": "#2a3f5f"}
 
-theme = {
-    "dark": False,
-    "primary": "#447EFF",
-    "secondary": "#D3D3D3",
-    "detail": "#D3D3D3",
-}
-
-
-
-
-app.layout = html.Div(style={'backgroundColor': colors['background']}, 
-
-    
+app.layout = html.Div(
+     className="container scalable",
     children=[
 
-    html.H1(
-            children='Dash COVID-19 en Chile',
+     html.Div(
+            id="banner",
+            className="banner",
+            children=[
+                html.H6("Dash COVID-19"),
+                html.Img(src=app.get_asset_url("plotly_logo.png")),
+            ],
+        ),
+
+      html.H1(
+            children='COVID-19 en Chile y el Mundo',
                     style={
                         'textAlign': 'center',
                         'color': colors['text']
                     }
                 ),
 
-    html.Div(children='Desarrollado por Rodrigo Ramirez', style={
+    html.Div(children='Desarrollado por Rodrigo Ramírez', style={
                     'textAlign': 'center',
                     'color': colors2['text']
                 }),
+      html.Div(children='ra.ramirez1993@gmail.com', style={
+                    'textAlign': 'center',
+                    'color': colors2['text']
+                }),
+
+
     html.Div(
-            className="app_main_content",
+             className="app_main_content",
             children=[
 
                 html.Div(
-                    id="dropdown-select-outer",
+                     id="dropdown-select-outer",
                     children=[
                         html.Div(
                             [
@@ -321,33 +324,30 @@ app.layout = html.Div(style={'backgroundColor': colors['background']},
 
 
 
-                html.Div( 
-                    id="top-row",
+                html.Div(  
                     className="row",
                     children=[
-
-
-
 
                     html.Div([
                         dcc.Graph(
                             id='basic-interactions',
+                            className="seven columns",
                             clickData={'points': [{'location': 'Chile'}]}
                         )
-                    ],style={'width': '49%','display': 'inline-block','padding-left': '20px'}),
+                    ],style={'padding-left': '20px','width': '86%'}),
             
                   
-                    html.Div([
-
+                    html.Div(  className="five columns",
+                        children=[
 
                     dcc.Graph(id='x-time-series'),
                     dcc.Graph(id='y-time-series'),
                     dcc.Graph(id='z-time-series'),
-                      ],style={'width': '49%','display': 'inline-block','padding-left': '20px'}),
+                      ],),
 
-
-                ]),
-
+#style={'width': '49%','display': 'inline-block','padding-left': '20px'}
+                ]
+                ),
 
                html.H3(
                     children='Grupos de edad',
@@ -360,39 +360,48 @@ app.layout = html.Div(style={'backgroundColor': colors['background']},
                     }
                 ),
 
-            #ABAJO
+
                 html.Div(
-                    id="bottom-row",
+                    id="middle-row",
                     className="row",
                     children=[
 
 
-                html.Div([
+                 dcc.RadioItems(
+                                className="selector",
+                                id='crossfilter-xaxis-type',
+                                options=[{'label': i, 'value': i} for i in ['Fallecidos', 'Casos']],
+                                value='Fallecidos',
+                                #style={'padding-left': '80px'}
+                                labelStyle={'display': 'inline-block','padding-left': '90px'}
+                                ),
 
-                    dcc.RadioItems(
-                            id='crossfilter-xaxis-type',
-                            options=[{'label': i, 'value': i} for i in ['Fallecidos', 'Casos']],
-                            value='Fallecidos',
-                            labelStyle={'display': 'inline-block','padding-left': '80px'}
-                    ),
-
-                    dcc.Graph(id='grafic-bar-grupo-falle',
-                             clickData={'points': [{'label': '<=39 '}]}
+                     html.Div(
+                         className="six columns",
+                         children =dcc.Graph(id='grafic-bar-grupo-falle',
+                         style={'padding-left': '20px','width': '85%'},
+                         clickData={'points': [{'label': '<=39 '}]}
                              ),
+                        ),
+                    
+                    html.Div(
+                        className="four columns",
 
-                ],style={'display': 'inline-block', 'width': '49%','padding-top': '10px','padding-left': '20px','float': 'left'}),
+                        children=dcc.Loading(
+                        children=dcc.Graph(id='grupo-time-series')),
+
+                ),
+
+                   
+
+                   
+
+                    ],
+                ),
 
 
-                html.Div([
-
-                dcc.Loading(dcc.Graph(id='grupo-time-series')),
-
-                ],style={'display': 'inline-block','width': '49%','padding-left': '20px'}),
-
-
-                ])
-
-])])
+            ])
+])
 
 
 
@@ -405,7 +414,7 @@ def create_time_series(dff,title,caso):
     else:
 
         fecha =dff.fecha.iloc[-1]
-        axis = axis_color["light"]
+
         if(caso=='c'):
             color="#33CFA5"
         elif(caso=='f'):
@@ -443,57 +452,110 @@ def create_time_series(dff,title,caso):
 
 #grupos de edad
 
-def create_time_series_grupo_edad(dff,title,grupo):
-    if(dff.empty):
-        return {
-       
-    }
+def create_time_series_grupo_edad(dff,title,grupo,caso):
     
-    fig = go.Figure()
+    if(caso=='Fallecidos'):
+        if(dff.empty):
+            return {
+           
+        }
+        
+        fig = go.Figure()
 
-    total_grupo_fall_df = pd.DataFrame({"Grupo":[ grupo,'Total'],"Fallecidos": [grupo_fallecidos[grupo_fallecidos['Grupo de edad']==grupo][fecha_grupo_fallecidos].sum(),total_fall_grupo]})
+        total_grupo_fall_df = pd.DataFrame({"Grupo":[ grupo,'Total'],"Fallecidos": [grupo_fallecidos[grupo_fallecidos['Grupo de edad']==grupo][fecha_grupo_fallecidos].sum(),total_fall_grupo]})
 
-    fig.add_trace(go.Pie(labels=total_grupo_fall_df.Grupo, values=total_grupo_fall_df.Fallecidos))
+        fig.add_trace(go.Pie(labels=total_grupo_fall_df.Grupo, values=total_grupo_fall_df.Fallecidos))
 
-    fig.add_trace(go.Scatter(x=dff.fecha,
-                       y=dff.casos,
-                       name=grupo,
-                       visible=False,
-                       line=dict(color="red")))
-
-
-    fig.update_layout(
-            updatemenus=[
-                dict(
-                    active=0,
-                    buttons=list([
-                        dict(label="Total Fallecidos",
-                             method="update",
-                             args=[{"visible": [True, False]},
-                                   {"title": "Porcentaje Total vs Grupo de "+grupo,
-                                    "annotations": []}]),
-                        dict(label=grupo,
-                             method="update",
-                             args=[{"visible": [False, True]},
-                                   {"title": "Evolución de Casos "+grupo,
-                                    "annotations": []}]),
-
-            ]),
-
-            direction="down",
-            pad={"r": 20, "t": 1},
-            showactive=True,
-            x=0.3,
-            xanchor="left",
-            y=1.5,
-            yanchor="top"
-                )
-            ])
+        fig.add_trace(go.Scatter(x=dff.fecha,
+                           y=dff.casos,
+                           name=grupo,
+                           visible=False,
+                           line=dict(color="red"),
+                           hoverinfo="name+x+text"
+                
+                           ))
 
 
-        # Set title
-    fig.update_layout(title_text="Porcentaje Total vs Grupo de "+grupo)
-   
+        fig.update_layout(
+                updatemenus=[
+                    dict(
+                        active=0,
+                        buttons=list([
+                            dict(label="Total Fallecidos",
+                                 method="update",
+                                 args=[{"visible": [True, False]},
+                                       {"title": "Porcentaje: Total Fallecidos vs Grupo de "+grupo,
+                                        "annotations": []}]),
+                            dict(label=grupo,
+                                 method="update",
+                                 args=[{"visible": [False, True]},
+                                       {"title": "Evolución de Casos "+grupo,
+                                        "annotations": []}]),
+
+                ]),
+
+                direction="down",
+                pad={"r": 20, "t": 1},
+                showactive=True,
+                x=0.3,
+                xanchor="left",
+                y=1.5,
+                yanchor="top"
+                    )
+                ])
+
+
+            # Set title
+        fig.update_layout(title_text="Porcentaje Total vs Grupo de "+grupo)
+
+    elif(caso=='Casos'):
+
+        fig = go.Figure()
+
+        fig.add_trace( go.Pie(
+                    labels=data_casos_grupo_edad_mf['Grupo de edad'],
+                    values=data_casos_grupo_edad_mf[fecha_grupo_edad],
+                    hoverinfo='label+percent', 
+                    textfont_size=12,
+                    marker=dict(#colors=colors, 
+                                line=dict(color='#000000', width=2)))
+
+                 )
+
+
+        fig.add_trace (go.Pie(
+                    labels=data_div_edad['Division Edad'],
+                    values=data_div_edad['Total Casos'],
+                    hoverinfo='label+percent', 
+                    textfont_size=12,
+                     visible=False,
+                    marker=dict(#colors=colors, 
+                                line=dict(color='#000000', width=2)))
+
+                  )
+
+        fig.update_layout(
+        updatemenus=[
+            dict(
+                active=0,
+                buttons=list([
+                    dict(label="Casos por Grupos",
+                         method="update",
+                         args=[{"visible": [True, False]},
+                               {"title": "Procentaje Casos por Edad",
+                                "annotations": []}]),
+                    dict(label="Distribución por Edad",
+                         method="update",
+                         args=[{"visible": [False,True]},
+                               {"title": "Procentaje Casos por Distribución por Edad",
+                                "annotations": []}]),
+
+                ]),
+            )
+        ])
+
+    # Set title
+    fig.update_layout(title_text="Procentaje de Casos")
 
 
     return fig
@@ -777,20 +839,30 @@ def update_y_timeseries(clickData,value):
 
 @app.callback(
     dash.dependencies.Output('grupo-time-series', 'figure'),
-    [dash.dependencies.Input('grafic-bar-grupo-falle', 'clickData'),])
-def update_y_timeseries_grupo_edad(clickData):
+    [dash.dependencies.Input('grafic-bar-grupo-falle', 'clickData'),
+    dash.dependencies.Input('crossfilter-xaxis-type', 'value')])
+def update_y_timeseries_grupo_edad(clickData,value):
     grupo_edad = clickData['points'][0]['label']
+    opcion = value
+
+    if(opcion=='Fallecidos'):
     
-    prueba = grupo_fallecidos[grupo_fallecidos['Grupo de edad']==grupo_edad]
-    if(prueba.empty):
-        grupo_fallecidos_df = pd.DataFrame()
-        title=[]
+        prueba = grupo_fallecidos[grupo_fallecidos['Grupo de edad']==grupo_edad]
+        if(prueba.empty):
+            grupo_fallecidos_df = pd.DataFrame()
+            title=[]
+
+
+        else:
+            grupo_edad = clickData['points'][0]['label']
+            grupo_fallecidos_df = pd.DataFrame({"fecha": fecha_ge, 
+                                             "casos": grupo_fallecidos[grupo_fallecidos['Grupo de edad']==grupo_edad].iloc[0,1:].values})
+            title='Evolución de Casos de Fallecidos Grupo de Edad: '+grupo_edad
     else:
-        grupo_edad = clickData['points'][0]['label']
-        grupo_fallecidos_df = pd.DataFrame({"fecha": fecha_ge, 
-                                         "casos": grupo_fallecidos[grupo_fallecidos['Grupo de edad']==grupo_edad].iloc[0,1:].values})
-        title='Evolución de Casos de Fallecidos Grupo de Edad: '+grupo_edad
-    return create_time_series_grupo_edad(grupo_fallecidos_df,title,grupo_edad)
+        grupo_fallecidos_df= pd.DataFrame()
+        title=[]
+
+    return create_time_series_grupo_edad(grupo_fallecidos_df,title,grupo_edad,opcion)
 
 
 
@@ -818,7 +890,6 @@ def update_grafico_bar_grupo_edad(value):
                     x=data[fecha].values,
                     y= data['Grupo de edad'],
                     orientation='h'))
-        fig2.update_layout()
 
     return fig2
 
