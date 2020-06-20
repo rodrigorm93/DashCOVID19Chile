@@ -239,7 +239,7 @@ jovenes = data_casos_grupo_edad_mf.iloc[3:6][fecha_grupo_edad].sum()
 adultos = data_casos_grupo_edad_mf.iloc[6:12][fecha_grupo_edad].sum()
 adultos_mayores = data_casos_grupo_edad_mf.iloc[12:17][fecha_grupo_edad].sum()
 
-data_div_edad = pd.DataFrame({'Division Edad': ['Niños','Jóvenes','Adultos','Adultos mayores'], 
+data_div_edad = pd.DataFrame({'Division Edad': ['Niños (0 y 14 años)','Jóvenes (15 y 29 años)','Adultos (30 y 59 años)','Adultos mayores (60 años y más)'], 
                               'Total Casos': [ninos,jovenes,adultos,adultos_mayores]})
 
 
@@ -644,7 +644,7 @@ def create_time_series_grupo_edad(dff,title,grupo,caso):
                                  args=[{"visible": [True, False]},
                                        {"title": "Porcentaje: Total Fallecidos vs Grupo de "+grupo,
                                         "annotations": []}]),
-                            dict(label=grupo,
+                            dict(label="Evolución de Casos",
                                  method="update",
                                  args=[{"visible": [False, True]},
                                        {"title": "Evolución de Casos "+grupo,
@@ -664,7 +664,7 @@ def create_time_series_grupo_edad(dff,title,grupo,caso):
 
 
             # Set title
-        fig.update_layout(title_text="Porcentaje Total vs Grupo de "+grupo)
+        fig.update_layout(title_text="Porcentaje Total vs Grupo de edad: "+grupo)
 
     elif(caso=='Casos'):
 
@@ -712,8 +712,8 @@ def create_time_series_grupo_edad(dff,title,grupo,caso):
             )
         ])
 
-    # Set title
-    fig.update_layout(title_text="Procentaje de Casos")
+    
+        fig.update_layout(title_text="Procentaje de Casos")
 
 
     return fig
@@ -763,7 +763,7 @@ def update_graph(value):
         fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
 
 
-    else:
+    elif(value=='Regiones'):
 
         fig = go.Figure(go.Choroplethmapbox(geojson= geo_region   , locations=data_region.Region, z=data_region.Casos,
                                     colorscale="Viridis", zmin=0, zmax=6000,
@@ -772,6 +772,29 @@ def update_graph(value):
         fig.update_layout(mapbox_style="carto-positron",
                           mapbox_zoom=3,height=700,mapbox_center = {"lat": -30.0000000, "lon": -71.0000000},clickmode ='event+select')
         fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
+
+
+    elif(value=='Pacientes COVID-19 en UCI por región'):
+
+        fig = go.Figure(go.Choroplethmapbox(geojson= geo_region   , locations=data_region.Region, z=data_region.Casos,
+                                    colorscale="Viridis", zmin=0, zmax=6000,
+                                    featureidkey="properties.NOM_REG",
+                                    marker_opacity=0.2, marker_line_width=0))
+        fig.update_layout(mapbox_style="carto-positron",
+                          mapbox_zoom=3,height=700,mapbox_center = {"lat": -30.0000000, "lon": -71.0000000},clickmode ='event+select')
+        fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
+
+
+    else:
+
+        fig = go.Figure(go.Choroplethmapbox(geojson= geo_region   , locations=data_region.Region, z=data_region.Casos,
+                                    colorscale="Viridis", zmin=0, zmax=6000,
+                                    featureidkey="properties.NOM_REG",
+                                    marker_opacity=0.2, marker_line_width=0))
+        fig.update_layout(mapbox_style="carto-positron",
+                          mapbox_zoom=3,height=700,mapbox_center = {"lat": -30.0000000, "lon": -71.0000000})
+        fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
+
 
 
 
