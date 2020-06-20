@@ -267,6 +267,153 @@ colors2 = {
 }
 
 
+#Funciones
+#grafico casos acumulados y diarios en todo chile
+def casos_ac_dia(data_crec_por_dia):
+    data_crec_por_dia = data_crec_por_dia.fillna(0)
+
+
+    fecha_casos_totales =data_crec_por_dia.columns
+    fecha_casos_totales= fecha_casos_totales[1:]
+
+        # Initialize figure
+    fig = go.Figure()
+
+        # Add Traces
+    casos_totales_df = pd.DataFrame({"fecha": fecha_casos_totales, 
+                                         "casos": data_crec_por_dia[data_crec_por_dia['Fecha']=='Casos totales'].iloc[0,1:].values})
+
+
+    fallecidos_totales_df = pd.DataFrame({"fecha": fecha_casos_totales, 
+                                              "casos": data_crec_por_dia[data_crec_por_dia['Fecha']=='Casos nuevos sin sintomas'].iloc[0,1:].values})
+
+    casos_nuevos_totales_df = pd.DataFrame({"fecha": fecha_casos_totales, 
+                                              "casos": data_crec_por_dia[data_crec_por_dia['Fecha']=='Casos nuevos totales'].iloc[0,1:].values})
+
+
+        #Casos por dia
+
+#Casos en Chile
+def casos_activos_FIS_FD(data_crec_por_dia,caso):
+    data_crec_por_dia = data_crec_por_dia.fillna(0)
+
+
+    fecha_casos_totales =data_crec_por_dia.columns
+    fecha_casos_totales= fecha_casos_totales[1:]
+
+        # Initialize figure
+    fig = go.Figure()
+    
+    if(caso == 'c'):
+        data1 = pd.DataFrame({"fecha": fecha_casos_totales, 
+                                         "casos": data_crec_por_dia[data_crec_por_dia['Fecha']=='Casos totales'].iloc[0,1:].values})
+        data2 = pd.DataFrame({"fecha": fecha_casos_totales, 
+                                              "casos": data_crec_por_dia[data_crec_por_dia['Fecha']=='Casos nuevos totales'].iloc[0,1:].values})
+        name1='Casos Totales Acumulados'
+        name2 = 'Casos Diarios'
+        titulo = 'Casos Acumulados y Diarios'
+        color1="#33CFA5"
+        color2 = "#2EECEA"
+    elif(caso=='uci'):
+        data1 = pd.DataFrame({"fecha": fecha_casos_totales, 
+                                             "casos": data_crec_por_dia[data_crec_por_dia['Fecha']=='Casos activos por FIS'].iloc[0,1:].values})
+
+
+        data2 = pd.DataFrame({"fecha": fecha_casos_totales, 
+                                                  "casos": data_crec_por_dia[data_crec_por_dia['Fecha']=='Casos activos por FD'].iloc[0,1:].values})
+        name1='Casos Activos FIS'
+        name2 = 'Casos Activos FD'
+        titulo= 'Casos Activos por FIS Y FD'
+
+        color1="#A966E5"
+        color2 = "#E14CF3"
+
+    fig.add_trace(
+            go.Scatter(x=data1.fecha,
+                       y=data1.casos,
+                       name=name1,
+                       text=data1.casos,
+                       line=dict(color=color1)))
+
+    fig.add_trace(
+        go.Scatter(x=data1.fecha,
+                       y=data2.casos,
+                       name=name2,
+                       text=data2.casos,
+                       mode='lines+markers',
+                       visible=False,
+                       line=dict(color=color2)))
+
+    fig.update_layout(
+            updatemenus=[
+                dict(
+                    active=0,
+                    buttons=list([
+
+                        dict(label=name1,
+                             method="update",
+                             args=[{"visible": [True, False]},
+                                   {"title": name1,
+                                    "annotations": []}]),
+
+                        dict(label=name2,
+                             method="update",
+                             args=[{"visible": [False, True]},
+                                   {"title":name2,
+                                    "annotations": []}]),
+
+
+                    ]),
+                direction="down",
+                pad={"r": 20, "t": 1},
+                showactive=True,
+                x=0.6,
+                xanchor="left",
+                y=1.5,
+                yanchor="top"
+                )
+                
+                
+                
+                
+            ])
+
+        # Set title
+    fig.update_layout(title_text=titulo)
+
+
+    # style all the traces
+    fig.update_traces(
+        hoverinfo="name+x+text",
+        line={"width": 0.7},
+        marker={"size": 5},
+        mode="lines+markers",
+        showlegend=False
+    )
+
+
+
+
+    # Update layout
+    fig.update_layout(
+        dragmode="zoom",
+        hovermode="x",
+        legend=dict(traceorder="reversed"),
+        height=280,
+        template="plotly_white",
+        margin=dict(
+            t=10,
+            b=10
+        ),
+    )
+    
+    
+    
+
+    return fig
+
+
+
 
 app.layout = html.Div(
      className="container scalable",
@@ -289,7 +436,7 @@ app.layout = html.Div(
                     }
                 ),
 
-    html.Div(children='Desarrollado por Rodrigo Ramírez', style={
+    html.Div(children='Desarrollado por Rodrigo Ramírez M.', style={
                     'textAlign': 'center',
                     'color': colors2['text']
                 }),
@@ -343,7 +490,7 @@ app.layout = html.Div(
                     dcc.Graph(id='x-time-series'),
                     dcc.Graph(id='y-time-series'),
                     dcc.Graph(id='z-time-series'),
-                      ],),
+                      ]),
 
 #style={'width': '49%','display': 'inline-block','padding-left': '20px'}
                 ]
@@ -386,7 +533,7 @@ app.layout = html.Div(
                     
                     html.Div(
                         className="four columns",
-                         style={'width': '38%'},
+                         style={'width': '40%'},
 
                         children=dcc.Loading(
                         children=dcc.Graph(id='grupo-time-series')),
@@ -408,10 +555,16 @@ app.layout = html.Div(
 
 #casos diarios
 def create_time_series(dff,title,caso):
-    if(dff.empty):
-        return {
-       
-    }
+    if(title=='Casos Chile'): 
+
+        fig = casos_activos_FIS_FD(data_crec_por_dia,caso)
+        return fig
+
+    elif(dff.empty):
+        return{
+
+        }
+
     else:
 
         fecha =dff.fecha.iloc[-1]
@@ -633,19 +786,20 @@ def update_graph(value):
     [dash.dependencies.Input('basic-interactions', 'clickData'),
     dash.dependencies.Input('crossfilter-xaxis-column', 'value')])
 def update_y_timeseries(clickData,value):
-    casos_diarios_df = pd.DataFrame({"fecha": fecha_casos_totales, 
-                                     "casos": data_crec_por_dia[data_crec_por_dia['Fecha']=='Casos totales'].iloc[0,1:].values})
-    title='Casos Acumulados: Chile'
+    #casos_diarios_df = pd.DataFrame({"fecha": fecha_casos_totales, 
+                                 #"casos": data_crec_por_dia[data_crec_por_dia['Fecha']=='Casos totales'].iloc[0,1:].values})
+    casos_diarios_df = pd.DataFrame()
+    title='Casos Chile'
     caso='c'
 
     if(value=='Regiones'):
         country_name = clickData['points'][0]['location']
         prueba = casos_por_dia[casos_por_dia['Region']==country_name]
+    
 
         if(prueba.empty):
-            casos_diarios_df = pd.DataFrame({"fecha": fecha_casos_totales, 
-                                     "casos": data_crec_por_dia[data_crec_por_dia['Fecha']=='Casos totales'].iloc[0,1:].values})
-            title='Casos Acumulados: Chile'
+            casos_diarios_df = pd.DataFrame()
+            title='Casos Chile'
             caso='c'
         else:
              casos_diarios_df = pd.DataFrame({"fecha": fecha_cd, "casos": casos_por_dia[casos_por_dia['Region']==country_name].iloc[0,1:].values})
@@ -655,26 +809,29 @@ def update_y_timeseries(clickData,value):
     elif(value=='Comunas'):
 
         country_name = clickData['points'][0]['location']
+       
    
         prueba2 = data_casos_por_comuna[data_casos_por_comuna['Comuna']==country_name]
 
         if(prueba2.empty):
-            casos_diarios_df = pd.DataFrame({"fecha": fecha_casos_totales, 
-                                     "casos": data_crec_por_dia[data_crec_por_dia['Fecha']=='Casos totales'].iloc[0,1:].values})
-            title='Casos Acumulados: Chile'
-            caso='c'
+            casos_diarios_df = pd.DataFrame()
+            title=[]
+            caso=[]
         else:
             casos_diarios_df = pd.DataFrame({"fecha": fecha_casos_comuna, "casos": data_casos_por_comuna[data_casos_por_comuna['Comuna']==country_name].iloc[0,5:].values})
             casos_diarios_df = casos_diarios_df.drop(casos_diarios_df.index[len(casos_diarios_df)-1])
             title='Casos Acumulados: '+country_name
     elif(value=='Chile'):
-        casos_diarios_df = pd.DataFrame({"fecha": fecha_casos_totales, 
-                                     "casos": data_crec_por_dia[data_crec_por_dia['Fecha']=='Casos totales'].iloc[0,1:].values})
-        title='Casos Acumulados: Chile'
+        #casos_diarios_df = pd.DataFrame({"fecha": fecha_casos_totales, 
+                                     #"casos": data_crec_por_dia[data_crec_por_dia['Fecha']=='Casos totales'].iloc[0,1:].values})
+        casos_diarios_df = pd.DataFrame()                
+        title='Casos Chile'
         caso='c'
+       
     elif(value=='Pacientes COVID-19 en UCI por región'):
         country_name = clickData['points'][0]['location']
         prueba2 = hosp_region[hosp_region['Region']==country_name]
+
 
         if(prueba2.empty):
             casos_diarios_df = pd.DataFrame()
@@ -689,6 +846,7 @@ def update_y_timeseries(clickData,value):
     elif(value=='Mundo entero'):
         country_name = clickData['points'][0]['location']
         prueba2 = data_confirmed[data_confirmed['Country/Region']==country_name]
+       
         if(prueba2.empty):
             casos_diarios_df = pd.DataFrame()
             title=[]
@@ -715,6 +873,7 @@ def update_y_timeseries(clickData,value):
                                           "casos": data_crec_por_dia[data_crec_por_dia['Fecha']=='Fallecidos'].iloc[0,1:].values})
     title='Fallecidos Acumulados: Chile'
     caso='f'
+    
 
     if(value=='Regiones'):
         country_name = clickData['points'][0]['location']
@@ -722,7 +881,7 @@ def update_y_timeseries(clickData,value):
 
         if(prueba.empty):
             fallecidos_diarios_df = pd.DataFrame({"fecha": fecha_casos_totales, 
-                                                  "casos": data_crec_por_dia[data_crec_por_dia['Fecha']=='Fallecidos'].iloc[0,1:].values})
+                                          "casos": data_crec_por_dia[data_crec_por_dia['Fecha']=='Fallecidos'].iloc[0,1:].values})
             title='Fallecidos Acumulados: Chile'
             caso='f'
         else:
@@ -736,10 +895,9 @@ def update_y_timeseries(clickData,value):
         country_name = clickData['points'][0]['location']
         prueba = data_fallecidos_por_comuna[data_fallecidos_por_comuna['Comuna']==country_name]
         if(prueba.empty):
-            fallecidos_diarios_df = pd.DataFrame({"fecha": fecha_casos_totales, 
-                                          "casos": data_crec_por_dia[data_crec_por_dia['Fecha']=='Fallecidos'].iloc[0,1:].values})
-            title='Fallecidos Acumulados: Chile'
-            caso='f'
+            fallecidos_diarios_df = pd.DataFrame()
+            title=[]
+            caso=[]
         else:
             country_name = clickData['points'][0]['location']
             fallecidos_diarios_df = pd.DataFrame({"fecha": fecha_fallecidos_comuna, "casos": data_fallecidos_por_comuna[data_fallecidos_por_comuna['Comuna']==country_name].iloc[0,5:].values})
@@ -778,19 +936,17 @@ def update_y_timeseries(clickData,value):
     [dash.dependencies.Input('basic-interactions', 'clickData'),
     dash.dependencies.Input('crossfilter-xaxis-column', 'value')])
 def update_y_timeseries(clickData,value):
-    activos_diarios_df = pd.DataFrame({"fecha": fecha_casos_totales, 
-                                         "casos": data_crec_por_dia[data_crec_por_dia['Fecha']=='Casos activos'].iloc[0,1:].values})
+    activos_diarios_df = pd.DataFrame()
     caso='uci'
-    title='Casos Activos Acumulados: Chile'
+    title='Casos Chile'
 
     if(value=='Regiones'):
         country_name = clickData['points'][0]['location']
         prueba = data_activos_region[data_activos_region['Region']==country_name]
         if(prueba.empty):
-            activos_diarios_df = pd.DataFrame({"fecha": fecha_casos_totales, 
-                                         "casos": data_crec_por_dia[data_crec_por_dia['Fecha']=='Casos activos'].iloc[0,1:].values})
+            activos_diarios_df = pd.DataFrame()
             caso='uci'
-            title='Casos Activos Acumulados: Chile'
+            title='Casos Chile'
         else:
             country_name = clickData['points'][0]['location']
             activos_diarios_df = pd.DataFrame({"fecha": fecha_activos_region, "casos": data_activos_region[data_activos_region['Region']==country_name].iloc[0,5:].values})
@@ -802,10 +958,9 @@ def update_y_timeseries(clickData,value):
         country_name = clickData['points'][0]['location']
         prueba = data_activos_por_comuna[data_activos_por_comuna['Comuna']==country_name]
         if(prueba.empty):
-            activos_diarios_df = pd.DataFrame({"fecha": fecha_casos_totales, 
-                                         "casos": data_crec_por_dia[data_crec_por_dia['Fecha']=='Casos activos'].iloc[0,1:].values})
-            caso='uci'
-            title='Casos Activos Acumulados: Chile'
+            activos_diarios_df = pd.DataFrame()
+            title=[]
+            caso=[]
 
         else:
             country_name = clickData['points'][0]['location']
@@ -813,10 +968,9 @@ def update_y_timeseries(clickData,value):
             caso='uci'
             title='Casos Activos: '+country_name
     elif(value=='Chile'):
-        activos_diarios_df = pd.DataFrame({"fecha": fecha_casos_totales, 
-                                         "casos": data_crec_por_dia[data_crec_por_dia['Fecha']=='Casos activos'].iloc[0,1:].values})
+        activos_diarios_df = pd.DataFrame()
         caso='uci'
-        title='Casos Activos: Chile'
+        title='Casos Chile'
 
     elif(value=='Pacientes COVID-19 en UCI por región'):
         activos_diarios_df = pd.DataFrame()
@@ -825,6 +979,7 @@ def update_y_timeseries(clickData,value):
     elif(value=='Mundo entero'):
         country_name = clickData['points'][0]['location']
         prueba2 = data_confirmed[data_confirmed['Country/Region']==country_name]
+
         if(prueba2.empty):
             activos_diarios_df = pd.DataFrame()
             title=[]
