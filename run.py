@@ -31,7 +31,7 @@ data_chile = pd.read_csv('https://raw.githubusercontent.com/MinCiencia/Datos-COV
 fallecidos_por_dia = pd.read_csv('https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master/output/producto14/FallecidosCumulativo.csv')
 grupo_uci_reg = pd.read_csv('https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master/output/producto8/UCI.csv')
 data_comunas = pd.read_csv('https://raw.githubusercontent.com/rodrigorm93/Datos-Chile/master/Casos-Comunas/COVID19.csv')
-data_casos_por_comuna2 = pd.read_csv('https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master/output/producto1/Covid-19.csv')
+
 data_crec_por_dia = pd.read_csv('https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master/output/producto5/TotalesNacionales.csv')
 
 
@@ -41,8 +41,7 @@ data_fallecidos_por_comuna = pd.read_csv('https://raw.githubusercontent.com/rodr
 data_activos_por_comuna = pd.read_csv('https://raw.githubusercontent.com/rodrigorm93/Datos-Chile/master/Casos-Comunas/casosActivos.csv')
 
 #comunas:
-
-fecha_casos_comuna =data_casos_por_comuna2.columns
+fecha_casos_comuna =data_casos_por_comuna.columns
 fecha_casos_comuna= fecha_casos_comuna[5:]
 
 fecha_fallecidos_comuna =data_fallecidos_por_comuna.columns
