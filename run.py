@@ -300,6 +300,8 @@ def casos_activos_FIS_FD(data_crec_por_dia,caso):
     fecha_casos_totales =data_crec_por_dia.columns
     fecha_casos_totales= fecha_casos_totales[1:]
 
+    fecha_act = data_crec_por_dia.columns[-1]
+
         # Initialize figure
     fig = go.Figure()
     
@@ -308,9 +310,9 @@ def casos_activos_FIS_FD(data_crec_por_dia,caso):
                                          "casos": data_crec_por_dia[data_crec_por_dia['Fecha']=='Casos totales'].iloc[0,1:].values})
         data2 = pd.DataFrame({"fecha": fecha_casos_totales, 
                                               "casos": data_crec_por_dia[data_crec_por_dia['Fecha']=='Casos nuevos totales'].iloc[0,1:].values})
-        name1='Casos Totales Acumulados'
-        name2 = 'Casos Diarios'
-        titulo = 'Casos Acumulados y Diarios'
+        name1='Casos Totales Acumulados '+fecha_act
+        name2 = 'Casos Diarios '+fecha_act
+        titulo = 'Casos Acumulados y Diarios '+fecha_act
         color1="#33CFA5"
         color2 = "#2EECEA"
     elif(caso=='uci'):
@@ -320,9 +322,9 @@ def casos_activos_FIS_FD(data_crec_por_dia,caso):
 
         data2 = pd.DataFrame({"fecha": fecha_casos_totales, 
                                                   "casos": data_crec_por_dia[data_crec_por_dia['Fecha']=='Casos activos por FD'].iloc[0,1:].values})
-        name1='Casos Activos FIS'
-        name2 = 'Casos Activos FD'
-        titulo= 'Casos Activos por FIS Y FD'
+        name1='Casos Activos FIS '+fecha_act
+        name2 = 'Casos Activos FD '+fecha_act
+        titulo= 'Casos Activos por FIS Y FD '+fecha_act
 
         color1="#A966E5"
         color2 = "#E14CF3"
@@ -615,6 +617,7 @@ def create_time_series_grupo_edad(dff,title,grupo,caso):
         
         fig = go.Figure()
 
+
         total_grupo_fall_df = pd.DataFrame({"Grupo":[ grupo,'Total'],"Fallecidos": [grupo_fallecidos[grupo_fallecidos['Grupo de edad']==grupo][fecha_grupo_fallecidos].sum(),total_fall_grupo]})
 
         fig.add_trace(go.Pie(labels=total_grupo_fall_df.Grupo, values=total_grupo_fall_df.Fallecidos))
@@ -627,10 +630,9 @@ def create_time_series_grupo_edad(dff,title,grupo,caso):
                             mode='lines+markers',
                            line=dict(color="red"),
                            hoverinfo="name+x+text",
-                           showlegend=False
-                           
+                           showlegend=False,)
                 
-                           ))
+                           )
 
 
         fig.update_layout(
@@ -664,6 +666,9 @@ def create_time_series_grupo_edad(dff,title,grupo,caso):
 
             # Set title
         fig.update_layout(title_text="Porcentaje Total vs Grupo de edad: "+grupo)
+
+
+        
 
     elif(caso=='Casos'):
 
@@ -1056,12 +1061,14 @@ def update_grafico_bar_grupo_edad(value):
     if(value == 'Fallecidos'):
         data = grupo_fallecidos
         fecha = fecha_grupo_fallecidos
+        fecha_grupo_act = fecha_grupo_fallecidos
+
 
         fig2 = go.Figure(go.Bar(
                     x=data[fecha].values,
                     y= data['Grupo de edad'],
                     orientation='h'))
-        fig2.update_layout(clickmode ='event+select')
+        fig2.update_layout(clickmode ='event+select',title_text='Número Fallicidos por grupo de edad '+fecha_grupo_act)
 
     else:
 
