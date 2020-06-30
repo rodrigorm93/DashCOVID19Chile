@@ -241,6 +241,10 @@ adultos_mayores = data_casos_grupo_edad_mf.iloc[12:17][fecha_grupo_edad].sum()
 data_div_edad = pd.DataFrame({'Division Edad': ['Niños (0 y 14 años)','Jóvenes (15 y 29 años)','Adultos (30 y 59 años)','Adultos mayores (60 años y más)'], 
                               'Total Casos': [ninos,jovenes,adultos,adultos_mayores]})
 
+#Grupos de Hospitalizados
+
+grupo_uci = pd.read_csv('https://raw.githubusercontent.com/MinCiencia/Datos-COVID19/master/output/producto9/HospitalizadosUCIEtario.csv')
+
 
 #figuras:
 
@@ -252,7 +256,7 @@ fig3.update_layout(uniformtext_minsize=9, uniformtext_mode='hide',clickmode ='ev
 
 
 
-available_indicators = ['Regiones','Comunas','Pacientes COVID-19 en UCI por región','Mundo entero']
+available_indicators = ['Regiones','Comunas','Pacientes COVID-19 en UCI por región','Mundo']
 
 
 colors = {
@@ -380,7 +384,7 @@ def casos_activos_FIS_FD(data_crec_por_dia,caso):
             ])
 
         # Set title
-    fig.update_layout(title_text=titulo)
+    fig.update_layout(title_text="Chile: "+titulo)
 
 
     # style all the traces
@@ -518,10 +522,10 @@ app.layout = html.Div(
                  dcc.RadioItems(
                                 className="selector",
                                 id='crossfilter-xaxis-type',
-                                options=[{'label': i, 'value': i} for i in ['Fallecidos', 'Casos']],
+                                options=[{'label': i, 'value': i} for i in ['Fallecidos', 'Casos','Pacientes en UCI']],
                                 value='Fallecidos',
                                 #style={'padding-left': '80px'}
-                                labelStyle={'display': 'inline-block','padding-left': '90px'}
+                                labelStyle={'display': 'inline-block','padding-left': '70px'}
                                 ),
 
                      html.Div(
@@ -667,7 +671,25 @@ def create_time_series_grupo_edad(dff,title,grupo,caso):
             # Set title
         fig.update_layout(title_text="Porcentaje Total vs Grupo de edad: "+grupo)
 
+    elif(caso=='Pacientes en UCI'):
+        if(dff.empty):
+            return {
+           
+        }
 
+        fig = go.Figure()
+
+        fecha_uci = grupo_uci.columns
+        fecha_uci_evo = grupo_uci.columns[1:]
+
+        data = dff
+
+        fig.add_trace(go.Scatter(x=fecha_uci_evo,
+                               y=data,
+                               name=grupo,
+                               line=dict(color="#33CFA5")))
+
+        fig.update_layout(title_text="Evolución de casos: "+grupo)  
         
 
     elif(caso=='Casos'):
@@ -719,6 +741,18 @@ def create_time_series_grupo_edad(dff,title,grupo,caso):
     
         fig.update_layout(title_text="Procentaje de Casos")
 
+         # Update layout
+    fig.update_layout(
+            dragmode="zoom",
+            hovermode="x",
+            legend=dict(traceorder="reversed"),
+            height=400,
+            template="plotly_white",
+            margin=dict(
+                t=40,
+                b=40
+            ),
+        )  
 
     return fig
 
@@ -1033,22 +1067,35 @@ def update_y_timeseries_grupo_edad(clickData,value):
     opcion = value
 
     if(opcion=='Fallecidos'):
-    
+        grupo_edad = clickData['points'][0]['label']
         prueba = grupo_fallecidos[grupo_fallecidos['Grupo de edad']==grupo_edad]
         if(prueba.empty):
             grupo_fallecidos_df = pd.DataFrame()
             title=[]
-
 
         else:
             grupo_edad = clickData['points'][0]['label']
             grupo_fallecidos_df = pd.DataFrame({"fecha": fecha_ge, 
                                              "casos": grupo_fallecidos[grupo_fallecidos['Grupo de edad']==grupo_edad].iloc[0,1:].values})
             title='Evolución de Casos de Fallecidos Grupo de Edad: '+grupo_edad
+
+
+    elif(opcion=='Pacientes en UCI'):
+        grupo_edad = clickData['points'][0]['label']
+        prueba = grupo_uci[grupo_uci['Grupo de edad']==grupo_edad]
+        if(prueba.empty):
+            grupo_fallecidos_df = pd.DataFrame()
+            title=[]
+
+        else:
+            grupo_edad = clickData['points'][0]['label']
+            grupo_fallecidos_df =grupo_uci[grupo_uci['Grupo de edad']== grupo_edad].iloc[0,1:]
+
+            title='Evolución de Casos de Fallecidos Grupo de Edad: '+grupo_edad
+      
     else:
         grupo_fallecidos_df= pd.DataFrame()
         title=[]
-
     return create_time_series_grupo_edad(grupo_fallecidos_df,title,grupo_edad,opcion)
 
 
@@ -1057,6 +1104,7 @@ def update_y_timeseries_grupo_edad(clickData,value):
     dash.dependencies.Output('grafic-bar-grupo-falle', 'figure'),
     [dash.dependencies.Input('crossfilter-xaxis-type', 'value'),])
 def update_grafico_bar_grupo_edad(value):
+
 
     if(value == 'Fallecidos'):
         data = grupo_fallecidos
@@ -1070,7 +1118,7 @@ def update_grafico_bar_grupo_edad(value):
                     orientation='h'))
         fig2.update_layout(clickmode ='event+select',title_text='Número Fallicidos por grupo de edad '+fecha_grupo_act)
 
-    else:
+    elif(value == 'Casos'):
 
         data = data_casos_grupo_edad_mf
         fecha = fecha_grupo_edad
@@ -1080,6 +1128,16 @@ def update_grafico_bar_grupo_edad(value):
                     y= data['Grupo de edad'],
                     orientation='h'))
 
+    else:
+        fecha_hosp = grupo_uci.columns[-1]
+
+        fig2 = go.Figure(go.Bar(
+                x=grupo_uci[fecha_hosp].values,
+                y= grupo_uci['Grupo de edad'],
+                orientation='h',marker_color='lightsalmon'))
+        fig2.update_layout(clickmode ='event+select',title_text='Número Hospitalizados por grupo de edad '+fecha_hosp)
+
+    #fig2.update_layout(height=400)
     return fig2
 
 
