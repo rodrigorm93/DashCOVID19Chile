@@ -904,7 +904,7 @@ def update_y_timeseries(clickData,value):
                                          "casos": hosp_region[hosp_region['Region']==country_name].iloc[0,3:].values})
             title=' Pacientes COVID-19 en UCI: '+country_name
             caso='c'
-    elif(value=='Mundo entero'):
+    elif(value=='Mundo'):
         country_name = clickData['points'][0]['location']
         prueba2 = data_confirmed[data_confirmed['Country/Region']==country_name]
        
@@ -975,7 +975,7 @@ def update_y_timeseries(clickData,value):
         title=[]
         caso=[]
 
-    elif(value=='Mundo entero'):
+    elif(value=='Mundo'):
         country_name = clickData['points'][0]['location']
         prueba2 = data_confirmed[data_confirmed['Country/Region']==country_name]
         if(prueba2.empty):
@@ -1037,7 +1037,7 @@ def update_y_timeseries(clickData,value):
         activos_diarios_df = pd.DataFrame()
         title=[]
         caso=[]
-    elif(value=='Mundo entero'):
+    elif(value=='Mundo'):
         country_name = clickData['points'][0]['location']
         prueba2 = data_confirmed[data_confirmed['Country/Region']==country_name]
 
