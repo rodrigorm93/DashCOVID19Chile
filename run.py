@@ -781,7 +781,7 @@ def update_graph(value):
         fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
 
 
-    elif(value=='Mundo entero'):
+    elif(value=='Mundo'):
         fig = go.Figure(go.Choroplethmapbox(geojson=geo_mundo, locations=data_cdr.Country, z=data_cdr.Casos,
                                     colorscale="Viridis", zmin=0, zmax=200000,
                                     featureidkey="properties.name",
